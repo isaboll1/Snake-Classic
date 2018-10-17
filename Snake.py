@@ -10,6 +10,9 @@ import random
 #GLOBALS
 WIDTH = 800
 HEIGHT = 600
+BOUNDS_W = WIDTH
+BOUNDS_H =  HEIGHT - 40
+
 WALL = False
 global DT
 
@@ -19,7 +22,7 @@ def main():
 
     SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)
 
-    window = SDL_CreateWindow(b'Snake - By Isa Bolling',SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+    window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling',SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
 
@@ -94,12 +97,12 @@ def main():
 
             if not WALL:
                 if self.Head.Rect.y < 2:
-                    self.Head.update(self.Head.Rect.x, HEIGHT-25)
-                if self.Head.Rect.y > HEIGHT - 25:
+                    self.Head.update(self.Head.Rect.x, BOUNDS_H-25)
+                if self.Head.Rect.y > BOUNDS_H - 25:
                     self.Head.update(self.Head.Rect.x, 2)
                 if self.Head.Rect.x < 2:
-                    self.Head.update(WIDTH - 25, self.Head.Rect.y)
-                if self.Head.Rect.x > WIDTH - 25:
+                    self.Head.update(BOUNDS_W - 25, self.Head.Rect.y)
+                if self.Head.Rect.x > BOUNDS_W - 25:
                     self.Head.update(2, self.Head.Rect.y)
 
         def Timing_Process(self):
@@ -155,7 +158,7 @@ def main():
             SDL_RenderFillRect(renderer, self.Rect)
 
 # __________________________OBJECTS____________________________________
-    BG = Node(0, 0,WIDTH, HEIGHT, (255,255,255))
+    BG = Node(0, 0,BOUNDS_W, BOUNDS_H, (255,255,255))
     SNAKE = Snake(20)
     APPLE = Fruit(20)
 #__________________________FUNCTIONS___________________________________
@@ -189,7 +192,7 @@ def main():
                 Movement = False
                 game = False
 
-            if (SNAKE.Head.Rect.y > HEIGHT - 25):
+            if (SNAKE.Head.Rect.y > BOUNDS_H - 25):
                 Movement = False
                 game = False
 
@@ -197,7 +200,7 @@ def main():
                 Movement = False
                 game = False
 
-            if (SNAKE.Head.Rect.x > WIDTH - 25):
+            if (SNAKE.Head.Rect.x > BOUNDS_W - 25):
                 Movement = False
                 game = False
 
@@ -210,12 +213,12 @@ def main():
         if (Touching_Apple(SNAKE, APPLE)):
             SNAKE.Increase()
 
-            APPLE.update(random.randint(30, WIDTH-30),
-                         random.randint(30, HEIGHT-30))
+            APPLE.update(random.randint(30, BOUNDS_W-30),
+                         random.randint(30, BOUNDS_H-30))
             for i in SNAKE.Body:
                 if APPLE.Rect.x - i.Rect.x < 15 and APPLE.Rect.y - i.Rect.y < 15:
-                    APPLE.update(random.randint(30, WIDTH - 30),
-                                 random.randint(30, HEIGHT - 30))
+                    APPLE.update(random.randint(30, BOUNDS_W - 30),
+                                 random.randint(30, BOUNDS_H - 30))
 
 
             Length = len(SNAKE.Body)
