@@ -19,10 +19,10 @@ global DT
 # ______________________________MAIN_______________________________________
 
 def main():
-
+    
     SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)
 
-    window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling',SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+    window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling', SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
 
