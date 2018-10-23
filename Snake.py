@@ -5,18 +5,18 @@ from sdl2.sdlttf import *
 import ctypes
 import random
 
-#Snake by Isa Bolling
+# Snake by Isa Bolling
 
-#GLOBALS
+# GLOBALS
 WIDTH = 800
 HEIGHT = 600
 BOUNDS_W = WIDTH
-BOUNDS_H =  HEIGHT - 40
+BOUNDS_H =  HEIGHT - 60
 
-WALL = False
+WALL = True
 global DT
 
-#______________________________MAIN_______________________________________
+# ______________________________MAIN_______________________________________
 
 def main():
 
@@ -26,7 +26,7 @@ def main():
                               WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
 
-    #VARIABLES
+    # VARIABLES
     event = SDL_Event()
     running = True
     direction = None
@@ -37,7 +37,7 @@ def main():
     Length = 0
     DT = 10
 
-#_____________________________CLASSES______________________________________
+# _____________________________CLASSES______________________________________
 
     class Node:
         def __init__(self, x, y, w, h, color):
@@ -69,7 +69,7 @@ def main():
                     self.body_color[i] = 208
 
         def Movement(self, direction):
-            #Head Movement
+            # Head Movement
             self.Timer += self.Factor
             if direction == 'Left' :
                 if self.Timer >= 10:
@@ -88,12 +88,12 @@ def main():
                     self.Head.update(self.Head.Rect.x, self.Head.Rect.y + self.size)
                     self.Timer = 0
 
-            #Body Movement
+            # Body Movement
             for i in range(1, len(self.Body)):
                 self.Body[i].update(self.Body[i-1].last_pos[0],
                                     self.Body[i-1].last_pos[1])
 
-            #EDGE_CASES
+            # EDGE_CASES
 
             if not WALL:
                 if self.Head.Rect.y < 2:
@@ -107,7 +107,7 @@ def main():
 
         def Timing_Process(self):
 
-            if self.limit == 8 :
+            if self.limit == 8:
                 self.Factor += 1
 
                 self.limit = 0
@@ -161,20 +161,20 @@ def main():
     BG = Node(0, 0,BOUNDS_W, BOUNDS_H, (255,255,255))
     SNAKE = Snake(20)
     APPLE = Fruit(20)
-#__________________________FUNCTIONS___________________________________
+# __________________________FUNCTIONS___________________________________
 
     def Touching_Apple(snake, fruit):
         return SDL_HasIntersection(snake.Head.Rect, fruit.Rect)
 
     def WindowState(window,renderer, fs):
-        if fs == False:
+        if not fs:
             SDL_SetWindowFullscreen(window, 0)
 
-        elif fs == True:
+        elif fs:
             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP)
             SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT)
 
-#__________________________GAME_LOOP_________________________________________
+# __________________________GAME_LOOP_________________________________________
 
     P_FPS = True
     PerfCountFrequency = SDL_GetPerformanceFrequency()
@@ -187,7 +187,7 @@ def main():
             SNAKE.Movement(direction)
             SNAKE.Timing_Process()
 
-        if  (WALL):
+        if (WALL):
             if (SNAKE.Head.Rect.y < 2):
                 Movement = False
                 game = False
@@ -213,20 +213,19 @@ def main():
         if (Touching_Apple(SNAKE, APPLE)):
             SNAKE.Increase()
 
-            APPLE.update(random.randint(30, BOUNDS_W-30),
+            APPLE.update(random.randint(30, BOUNDS_W-60),
                          random.randint(30, BOUNDS_H-30))
             for i in SNAKE.Body:
                 if APPLE.Rect.x - i.Rect.x < 15 and APPLE.Rect.y - i.Rect.y < 15:
-                    APPLE.update(random.randint(30, BOUNDS_W - 30),
+                    APPLE.update(random.randint(30, BOUNDS_W - 60),
                                  random.randint(30, BOUNDS_H - 30))
 
 
             Length = len(SNAKE.Body)
 
-    #_____________________RENDER LOOP_____________________________
+    # _____________________RENDER LOOP_____________________________
         SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
         SDL_RenderClear(renderer)
-
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
         SDL_RenderFillRect(renderer, BG.Rect)
@@ -236,15 +235,15 @@ def main():
 
         SDL_RenderPresent(renderer)
 
-        if (P_FPS == True):
+        if (P_FPS):
             EndCounter = SDL_GetPerformanceCounter()
             CounterElapsed = EndCounter - LastCounter
             MSPerFrame = 1000.0 * (CounterElapsed) / (PerfCountFrequency)
             FPS = PerfCountFrequency // CounterElapsed
-            print('FPS: ',FPS, 'FRAMETIME: ', MSPerFrame)
+            print('FPS: ', FPS, 'FRAMETIME: ', MSPerFrame)
             LastCounter = EndCounter
 
-    #____________________EVENT_LOOP_________________________________
+    # ____________________EVENT_LOOP_________________________________
         while(SDL_PollEvent(ctypes.byref(event))):
 
             if(event.type == SDL_QUIT):
@@ -273,16 +272,19 @@ def main():
                     break
 
                 if(event.key.keysym.scancode == SDL_SCANCODE_F12):
-                    if Fullscreen == False:
+                    if Fullscreen is False:
                         Fullscreen = True
                         WindowState(window, renderer, Fullscreen)
                     else:
                         Fullscreen = False
-                        WindowState(window, renderer, Fullscreen )
+                        WindowState(window, renderer, Fullscreen)
 
         SDL_Delay(DT)
 
     SDL_DestroyWindow(window)
     SDL_DestroyRenderer(renderer)
-#____________________________________________________________________________
+    SDL_Quit()
+# ____________________________________________________________________________
+
+
 main()
