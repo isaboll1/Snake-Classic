@@ -21,6 +21,7 @@ global DT
 def main():
 
     SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)
+    TTF_Init()
 
     window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling', SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
@@ -40,14 +41,14 @@ def main():
 # _____________________________CLASSES______________________________________
     class TextObject:
         fonts = dict()
-        def __init__(self, text, width, height, font_name,color = (255,255,255),
-                                              font_size = 16):
+        def __init__(self, text, width, height, font_name,color = (0,0,0),
+                                              font_size = 36):
             if len(font_name) > 1:
                 TextObject.fonts[font_name[0]] = TTF_OpenFont(font_name[1], font_size)
             self.color = SDL_Color(color[0], color[1], color[2])
-            surface = TTF_RenderText_Solid(TextObject.fonts[font_name[0]], text.encode('utf-8'), self.color)
-            self.message = SDL_CreateTextureFromSurface(renderer, surface)
-            SDL_FreeSurface(surface)
+            self.surface = TTF_RenderText_Solid(TextObject.fonts[font_name[0]], text.encode('utf-8'), self.color)
+            self.message = SDL_CreateTextureFromSurface(renderer, self.surface)
+            SDL_FreeSurface(self.surface)
             self.rect = SDL_Rect(0, 0, width, height)
             self.highlight = False
 
@@ -55,6 +56,8 @@ def main():
             if self.highlight:
                 SDL_SetRenderDrawColor(renderer, self.color[0], self.color[1], self.color[2], 255)
                 SDL_RenderFillRect(renderer, self.rect)
+            self.rect.x = x
+            self.rect.y = y
             SDL_RenderCopy(renderer, self.message, None, self.rect)
 
         def __del__(self):
@@ -182,7 +185,7 @@ def main():
             SDL_RenderFillRect(renderer, self.Rect)
 
 # __________________________OBJECTS____________________________________
-    Title = TextObject('Snake Classic', 200, 100, ['Arcade',b'font/arcade.TTF'])
+    Title = TextObject('Snake  Classic', 400, 200, ['Arcade',b'font/arcade.ttf'])
     BG = Node(0, 0,BOUNDS_W, BOUNDS_H, (255,255,255))
     SNAKE = Snake(20)
     APPLE = Fruit(20)
@@ -208,7 +211,10 @@ def main():
     while(running):
         #print(len(SNAKE.Body))
         if menu:
-            Title.Render(0,0)
+            SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
+            SDL_RenderClear(renderer)
+            Title.Render(200,100)
+            SDL_RenderPresent(renderer)
         if game:
             if (Movement):
                 SNAKE.Movement(direction)
