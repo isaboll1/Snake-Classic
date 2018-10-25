@@ -19,7 +19,7 @@ global DT
 # ______________________________MAIN_______________________________________
 
 def main():
-    
+
     SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)
 
     window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling', SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -31,13 +31,37 @@ def main():
     running = True
     direction = None
     Movement = False
-    game = True
+    menu = True
+    game = False
     Fullscreen = False
-    Game_Start = True
     Length = 0
     DT = 10
 
 # _____________________________CLASSES______________________________________
+    class TextObject:
+        fonts = dict()
+        def __init__(self, text, width, height, font_name,color = (255,255,255),
+                                              font_size = 16):
+            if len(font_name) > 1:
+                TextObject.fonts[font_name[0]] = TTF_OpenFont(font_name[1], font_size)
+            self.color = SDL_Color(color[0], color[1], color[2])
+            surface = TTF_RenderText_Solid(TextObject.fonts[font_name[0]], text.encode('utf-8'), self.color)
+            self.message = SDL_CreateTextureFromSurface(renderer, surface)
+            SDL_FreeSurface(surface)
+            self.rect = SDL_Rect(0, 0, width, height)
+            self.highlight = False
+
+        def Render(self, x, y):
+            if self.highlight:
+                SDL_SetRenderDrawColor(renderer, self.color[0], self.color[1], self.color[2], 255)
+                SDL_RenderFillRect(renderer, self.rect)
+            SDL_RenderCopy(renderer, self.message, None, self.rect)
+
+        def __del__(self):
+            print(TextObject.fonts)
+            for key in TextObject.fonts:
+                TTF_CloseFont(TextObject.fonts[key])
+            SDL_DestroyTexture(self.message)
 
     class Node:
         def __init__(self, x, y, w, h, color):
@@ -158,6 +182,7 @@ def main():
             SDL_RenderFillRect(renderer, self.Rect)
 
 # __________________________OBJECTS____________________________________
+    Title = TextObject('Snake Classic', 200, 100, ['Arcade',b'font/arcade.TTF'])
     BG = Node(0, 0,BOUNDS_W, BOUNDS_H, (255,255,255))
     SNAKE = Snake(20)
     APPLE = Fruit(20)
@@ -182,58 +207,60 @@ def main():
 
     while(running):
         #print(len(SNAKE.Body))
+        if menu:
+            Title.Render(0,0)
+        if game:
+            if (Movement):
+                SNAKE.Movement(direction)
+                SNAKE.Timing_Process()
 
-        if (Movement):
-            SNAKE.Movement(direction)
-            SNAKE.Timing_Process()
+            if (WALL):
+                if (SNAKE.Head.Rect.y < 2):
+                    Movement = False
+                    game = False
 
-        if (WALL):
-            if (SNAKE.Head.Rect.y < 2):
+                if (SNAKE.Head.Rect.y > BOUNDS_H - 25):
+                    Movement = False
+                    game = False
+
+                if (SNAKE.Head.Rect.x < 2):
+                    Movement = False
+                    game = False
+
+                if (SNAKE.Head.Rect.x > BOUNDS_W - 25):
+                    Movement = False
+                    game = False
+
+
+            if (SNAKE.Is_Touching_Body()):
                 Movement = False
                 game = False
 
-            if (SNAKE.Head.Rect.y > BOUNDS_H - 25):
-                Movement = False
-                game = False
 
-            if (SNAKE.Head.Rect.x < 2):
-                Movement = False
-                game = False
+            if (Touching_Apple(SNAKE, APPLE)):
+                SNAKE.Increase()
 
-            if (SNAKE.Head.Rect.x > BOUNDS_W - 25):
-                Movement = False
-                game = False
-
-
-        if (SNAKE.Is_Touching_Body()):
-            Movement = False
-            game = False
+                APPLE.update(random.randint(30, BOUNDS_W-60),
+                             random.randint(30, BOUNDS_H-30))
+                for i in SNAKE.Body:
+                    if APPLE.Rect.x - i.Rect.x < 15 and APPLE.Rect.y - i.Rect.y < 15:
+                        APPLE.update(random.randint(30, BOUNDS_W - 60),
+                                     random.randint(30, BOUNDS_H - 30))
 
 
-        if (Touching_Apple(SNAKE, APPLE)):
-            SNAKE.Increase()
+                Length = len(SNAKE.Body)
 
-            APPLE.update(random.randint(30, BOUNDS_W-60),
-                         random.randint(30, BOUNDS_H-30))
-            for i in SNAKE.Body:
-                if APPLE.Rect.x - i.Rect.x < 15 and APPLE.Rect.y - i.Rect.y < 15:
-                    APPLE.update(random.randint(30, BOUNDS_W - 60),
-                                 random.randint(30, BOUNDS_H - 30))
+        # _____________________RENDER LOOP_____________________________
+            SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
+            SDL_RenderClear(renderer)
 
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
+            SDL_RenderFillRect(renderer, BG.Rect)
 
-            Length = len(SNAKE.Body)
+            APPLE.Render()
+            SNAKE.Render()
 
-    # _____________________RENDER LOOP_____________________________
-        SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
-        SDL_RenderClear(renderer)
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
-        SDL_RenderFillRect(renderer, BG.Rect)
-
-        APPLE.Render()
-        SNAKE.Render()
-
-        SDL_RenderPresent(renderer)
+            SDL_RenderPresent(renderer)
 
         if (P_FPS):
             EndCounter = SDL_GetPerformanceCounter()
@@ -253,19 +280,19 @@ def main():
             if(event.type == SDL_KEYDOWN):
                 if game:
                     Movement = True
-
-                if(event.key.keysym.scancode == SDL_SCANCODE_LEFT):
-                    if direction != "Right":
-                        direction = "Left"
-                elif(event.key.keysym.scancode == SDL_SCANCODE_RIGHT):
-                    if direction != "Left":
-                        direction = "Right"
-                elif (event.key.keysym.scancode == SDL_SCANCODE_UP):
-                    if direction != "Down":
-                        direction = "Up"
-                elif (event.key.keysym.scancode == SDL_SCANCODE_DOWN):
-                    if direction != "Up":
-                        direction = "Down"
+                if game:
+                    if(event.key.keysym.scancode == SDL_SCANCODE_LEFT):
+                        if direction != "Right":
+                            direction = "Left"
+                    elif(event.key.keysym.scancode == SDL_SCANCODE_RIGHT):
+                        if direction != "Left":
+                            direction = "Right"
+                    elif (event.key.keysym.scancode == SDL_SCANCODE_UP):
+                        if direction != "Down":
+                            direction = "Up"
+                    elif (event.key.keysym.scancode == SDL_SCANCODE_DOWN):
+                        if direction != "Up":
+                            direction = "Down"
 
                 if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE):
                     running = False
