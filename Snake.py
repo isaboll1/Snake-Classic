@@ -12,7 +12,7 @@ import random
 WIDTH = 800
 HEIGHT = 600
 BOUNDS_W = WIDTH
-BOUNDS_H =  HEIGHT - 60
+BOUNDS_H = HEIGHT - 60
 
 WALL = True
 global DT
@@ -23,7 +23,7 @@ def main():
     if not TTF_WasInit():
         TTF_Init()
 
-    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS) < 0):
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0):
         print(SDL_GetError())
 
     window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling', SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -149,7 +149,7 @@ def main():
             for i in range(2, rate):
                 self.Body.append(Node(self.Body[len(self.Body)-1].last_pos[0],
                                       self.Body[len(self.Body)-1].last_pos[1],
-                                      self.size,self.size, (0, 208, 0)))
+                                      self.size, self.size, (0, 208, 0)))
 
             self.limit += 1
 
@@ -158,7 +158,7 @@ def main():
             self.Head = self.Body[0]
             SDL_SetRenderDrawColor(renderer, self.head_color[0], self.head_color[1], self.head_color[2], 255)
             SDL_RenderFillRect(renderer, self.Head.Rect)
-            for i in range (1, len(self.Body)):
+            for i in range(1, len(self.Body)):
                 SDL_SetRenderDrawColor(renderer, self.body_color[0], self.body_color[1], self.body_color[2], 255)
                 SDL_RenderFillRect(renderer, self.Body[i].Rect)
 
@@ -173,9 +173,7 @@ def main():
         def __init__(self, size = 10, x = 320, y = 400 ):
             self.Color = (255, 0, 0)
             self.Rect = SDL_Rect(x, y, size, size)
-            SDL_SetRenderDrawColor(renderer,self.Color[0]
-                                           ,self.Color[1],
-                                            self.Color[2], 255)
+            SDL_SetRenderDrawColor(renderer, self.Color[0], self.Color[1], self.Color[2], 255)
 
         def update(self, x, y):
             self.Rect.x = x
@@ -221,7 +219,7 @@ def main():
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
             SDL_RenderFillRect(renderer, BG.Rect)
 
-            Title.Render(200,100)
+            Title.Render(200, 100)
 
             SDL_RenderPresent(renderer)
         if game:
