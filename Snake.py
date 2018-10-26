@@ -5,6 +5,7 @@ from sdl2.sdlttf import *
 import ctypes
 import random
 
+
 # Snake by Isa Bolling
 
 # GLOBALS
@@ -19,9 +20,11 @@ global DT
 # ______________________________MAIN_______________________________________
 
 def main():
+    if not TTF_WasInit():
+        TTF_Init()
 
-    SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)
-    TTF_Init()
+    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS) < 0):
+        print(SDL_GetError())
 
     window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling', SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
@@ -54,8 +57,8 @@ def main():
 
         def Render(self, x, y):
             if self.highlight:
-                SDL_SetRenderDrawColor(renderer, self.color[0], self.color[1], self.color[2], 255)
-                SDL_RenderFillRect(renderer, self.rect)
+                SDL_SetRenderDrawColor(renderer, self.color.r, self.color.g, self.color.b, self.color.a)
+                SDL_RenderDrawRect(renderer, self.rect)
             self.rect.x = x
             self.rect.y = y
             SDL_RenderCopy(renderer, self.message, None, self.rect)
@@ -185,8 +188,8 @@ def main():
             SDL_RenderFillRect(renderer, self.Rect)
 
 # __________________________OBJECTS____________________________________
-    Title = TextObject('Snake  Classic', 400, 200, ['Arcade',b'font/arcade.ttf'])
-    BG = Node(0, 0,BOUNDS_W, BOUNDS_H, (255,255,255))
+    BG = Node(0, 0, BOUNDS_W, BOUNDS_H, (255, 255, 255))
+    Title = TextObject('Snake  Classic', 400, 220, ['arcade',b'font/arcade.ttf'], (239,239,239))
     SNAKE = Snake(20)
     APPLE = Fruit(20)
 # __________________________FUNCTIONS___________________________________
@@ -211,9 +214,15 @@ def main():
     while(running):
         #print(len(SNAKE.Body))
         if menu:
+            BG.Rect.y = 30
             SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
             SDL_RenderClear(renderer)
+
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
+            SDL_RenderFillRect(renderer, BG.Rect)
+
             Title.Render(200,100)
+
             SDL_RenderPresent(renderer)
         if game:
             if (Movement):
@@ -278,7 +287,6 @@ def main():
 
     # ____________________EVENT_LOOP_________________________________
         while(SDL_PollEvent(ctypes.byref(event))):
-
             if(event.type == SDL_QUIT):
                 running = False
                 break
@@ -286,7 +294,7 @@ def main():
             if(event.type == SDL_KEYDOWN):
                 if game:
                     Movement = True
-                if game:
+
                     if(event.key.keysym.scancode == SDL_SCANCODE_LEFT):
                         if direction != "Right":
                             direction = "Left"
@@ -317,7 +325,9 @@ def main():
     SDL_DestroyWindow(window)
     SDL_DestroyRenderer(renderer)
     SDL_Quit()
-# ____________________________________________________________________________
+    TTF_Quit()
 
+    return 0
+# ____________________________________________________________________________
 
 main()
