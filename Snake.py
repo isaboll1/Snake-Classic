@@ -20,8 +20,8 @@ global DT
 # ______________________________MAIN_______________________________________
 
 def main():
-    if not TTF_WasInit():
-        TTF_Init()
+    if (TTF_Init() < 0):
+        print(TTF_GetError())
 
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0):
         print(SDL_GetError())
@@ -42,32 +42,61 @@ def main():
     DT = 10
 
 # _____________________________CLASSES______________________________________
+    class Pointer:
+        def __init__(self):
+            self.pointer = SDL_Rect(0,0,10,10)
+            self.clicking = False
+
+        def Compute(self):
+            if(event.type == SDL_MOUSEBUTTONDOWN):
+                if(event.button.button == SDL_BUTTON_LEFT):
+                    self.clicking = True
+            if(event.type == SDL_MOUSEBUTTONUP):
+                self.clicking = False
+
+            if(event.type == SDL_MOUSEMOTION):
+                self.pointer.x = event.motion.x
+                self.pointer.y = event.motion.y
+
+        def Is_Touching(self, item):
+            return SDL_HasIntersection(self.pointer, item.rect)
+
+        def Is_Clicking(self, item):
+            return self.Is_Touching(item) and self.clicking
+
+
+
     class TextObject:
         fonts = dict()
-        def __init__(self, text, width, height, font_name,color = (0,0,0),
-                                              font_size = 36):
+        def __init__(self, text, width, height, font_name,color = (0,0,0), location = (0, 0),
+                                                                            font_size = 36):
             if len(font_name) > 1:
                 TextObject.fonts[font_name[0]] = TTF_OpenFont(font_name[1], font_size)
             self.color = SDL_Color(color[0], color[1], color[2])
             self.surface = TTF_RenderText_Solid(TextObject.fonts[font_name[0]], text.encode('utf-8'), self.color)
             self.message = SDL_CreateTextureFromSurface(renderer, self.surface)
             SDL_FreeSurface(self.surface)
-            self.rect = SDL_Rect(0, 0, width, height)
+            self.rect = SDL_Rect(location[0], location[1], width, height)
             self.highlight = False
 
-        def Render(self, x, y):
+        def Render(self, x = None, y = None):
             if self.highlight:
                 SDL_SetRenderDrawColor(renderer, self.color.r, self.color.g, self.color.b, self.color.a)
                 SDL_RenderDrawRect(renderer, self.rect)
-            self.rect.x = x
-            self.rect.y = y
+            if x is None and y:
+                self.rect.y = y
+            elif x and y is None:
+                self.rect.x = x
+            elif x and y:
+                self.rect.x = x
+                self.rect.y = y
             SDL_RenderCopy(renderer, self.message, None, self.rect)
 
         def __del__(self):
-            print(TextObject.fonts)
+            SDL_DestroyTexture(self.message)
             for key in TextObject.fonts:
                 TTF_CloseFont(TextObject.fonts[key])
-            SDL_DestroyTexture(self.message)
+
 
     class Node:
         def __init__(self, x, y, w, h, color):
@@ -169,6 +198,10 @@ def main():
                         return True
             return False
 
+        def __del__(self):
+            for node in self.Body:
+                SDL_free(node)
+
     class Fruit:
         def __init__(self, size = 10, x = 320, y = 400 ):
             self.Color = (255, 0, 0)
@@ -186,8 +219,15 @@ def main():
             SDL_RenderFillRect(renderer, self.Rect)
 
 # __________________________OBJECTS____________________________________
+    mouse = Pointer()
     BG = Node(0, 0, BOUNDS_W, BOUNDS_H, (255, 255, 255))
     Title = TextObject('Snake  Classic', 400, 220, ['arcade',b'font/arcade.ttf'], (239,239,239))
+    MenuItems = {
+        'Fullscreen':TextObject('Fullscreen', 150, 100, ['arcade'],(239,239,239),(100, 350)),
+        'Start'     :TextObject('Start', 100, 100, ['arcade'], (239, 239, 239), (350, 350)),
+        'Quit'      :TextObject('Quit', 100, 100, ['arcade'], (239,239,239), (550, 350))
+    }
+
     SNAKE = Snake(20)
     APPLE = Fruit(20)
 # __________________________FUNCTIONS___________________________________
@@ -213,15 +253,42 @@ def main():
         #print(len(SNAKE.Body))
         if menu:
             BG.Rect.y = 30
+
+            for item in MenuItems:
+                if mouse.Is_Touching(MenuItems[item]):
+                    MenuItems[item].highlight = True
+                else:
+                    MenuItems[item].highlight = False
+
+            if mouse.Is_Clicking(MenuItems['Start']):
+
+                menu = False
+                game = True
+                BG.Rect.y = 0
+
+            if mouse.Is_Clicking(MenuItems['Fullscreen']):
+                if Fullscreen is False:
+                    Fullscreen = True
+                    WindowState(window, renderer, Fullscreen)
+                else:
+                    Fullscreen = False
+                    WindowState(window, renderer, Fullscreen)
+
+            if mouse.Is_Clicking(MenuItems['Quit']):
+                running = False
+                break
+
             SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
             SDL_RenderClear(renderer)
 
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
             SDL_RenderFillRect(renderer, BG.Rect)
-
+            for key in MenuItems:
+                MenuItems[key].Render()
             Title.Render(200, 100)
 
             SDL_RenderPresent(renderer)
+
         if game:
             if (Movement):
                 SNAKE.Movement(direction)
@@ -285,6 +352,8 @@ def main():
 
     # ____________________EVENT_LOOP_________________________________
         while(SDL_PollEvent(ctypes.byref(event))):
+            mouse.Compute()
+
             if(event.type == SDL_QUIT):
                 running = False
                 break
