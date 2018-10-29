@@ -37,6 +37,8 @@ def main():
     Movement = False
     menu = True
     game = False
+    difficulty = False
+    g_options = False
     Fullscreen = False
     Length = 0
     DT = 10
@@ -198,9 +200,6 @@ def main():
                         return True
             return False
 
-        def __del__(self):
-            for node in self.Body:
-                SDL_free(node)
 
     class Fruit:
         def __init__(self, size = 10, x = 320, y = 400 ):
@@ -221,13 +220,20 @@ def main():
 # __________________________OBJECTS____________________________________
     mouse = Pointer()
     BG = Node(0, 0, BOUNDS_W, BOUNDS_H, (255, 255, 255))
-    Title = TextObject('Snake  Classic', 400, 220, ['arcade',b'font/arcade.ttf'], (239,239,239))
+    Title = TextObject('Snake  Classic', 400, 220, ['arcade', b'font/arcade.ttf'], (239,239,239))
     MenuItems = {
-        'Fullscreen':TextObject('Fullscreen', 150, 100, ['arcade'],(239,239,239),(100, 350)),
-        'Start'     :TextObject('Start', 100, 100, ['arcade'], (239, 239, 239), (350, 350)),
-        'Quit'      :TextObject('Quit', 100, 100, ['arcade'], (239,239,239), (550, 350))
+        'Fullscreen': TextObject('Fullscreen', 150, 100, ['arcade'], (239, 239, 239), (100, 350)),
+        'Start':      TextObject('Start', 100, 100, ['arcade'], (239, 239, 239), (350, 350)),
+        'Quit':       TextObject('Quit', 100, 100, ['arcade'], (239, 239, 239), (550, 350))
     }
-
+    GameDifficulty = {
+        'Easy':   TextObject('Easy', 70, 50, ['arcade'], (239, 239, 239), (240, 480)),
+        'Normal': TextObject('Normal', 100, 50, ['arcade'], (239, 239, 239), (460, 480))
+    }
+    GameItems = {
+        'Quit':    TextObject('Quit', 60, 50, ['arcade'], location = (450, 545)),
+        'Restart': TextObject('Restart', 100, 50, ['arcade'], location = (600, 545))
+    }
     SNAKE = Snake(20)
     APPLE = Fruit(20)
 # __________________________FUNCTIONS___________________________________
@@ -251,20 +257,41 @@ def main():
 
     while(running):
         #print(len(SNAKE.Body))
-        if menu:
-            BG.Rect.y = 30
+        if (g_options):
+            for item in GameItems:
+                GameItems[item].highlight = False
 
+                if mouse.Is_Touching(GameItems[item]):
+                    GameItems[item].highlight = True
+
+            if mouse.Is_Clicking(GameItems['Restart']):
+                del SNAKE
+                del APPLE
+                SNAKE = Snake(20)
+                APPLE = Fruit(20)
+                Movement = False
+                game = True
+                direction = None
+                g_options = False
+
+            if mouse.Is_Clicking(GameItems['Quit']):
+                running = False
+                break
+
+        if (menu):
+            BG.Rect.y = 30
             for item in MenuItems:
-                if mouse.Is_Touching(MenuItems[item]):
-                    MenuItems[item].highlight = True
+                if item == 'Start' and difficulty:
+                    pass
                 else:
-                    MenuItems[item].highlight = False
+                    if mouse.Is_Touching(MenuItems[item]):
+                        MenuItems[item].highlight = True
+                    else:
+                        MenuItems[item].highlight = False
 
             if mouse.Is_Clicking(MenuItems['Start']):
-
-                menu = False
-                game = True
-                BG.Rect.y = 0
+                difficulty = True
+                MenuItems['Start'].highlight = True
 
             if mouse.Is_Clicking(MenuItems['Fullscreen']):
                 if Fullscreen is False:
@@ -278,6 +305,27 @@ def main():
                 running = False
                 break
 
+        if (difficulty):
+            for item in GameDifficulty:
+                GameDifficulty[item].highlight = False
+                if mouse.Is_Touching(GameDifficulty[item]):
+                    GameDifficulty[item].highlight = True
+
+            if mouse.Is_Clicking(GameDifficulty['Easy']):
+                difficulty = False
+                WALL = False
+                menu = False
+                game = True
+                BG.Rect.y = 0
+
+            if mouse.Is_Clicking(GameDifficulty['Normal']):
+                difficulty = False
+                WALL = True
+                menu = False
+                game = True
+                BG.Rect.y = 0
+
+        if (menu or difficulty):
             SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
             SDL_RenderClear(renderer)
 
@@ -285,39 +333,46 @@ def main():
             SDL_RenderFillRect(renderer, BG.Rect)
             for key in MenuItems:
                 MenuItems[key].Render()
+            if difficulty:
+                for option in GameDifficulty:
+                    GameDifficulty[option].Render()
+
             Title.Render(200, 100)
 
             SDL_RenderPresent(renderer)
 
-        if game:
-            if (Movement):
+        if (game):
+            if Movement:
                 SNAKE.Movement(direction)
                 SNAKE.Timing_Process()
 
-            if (WALL):
+            if WALL:
                 if (SNAKE.Head.Rect.y < 2):
                     Movement = False
                     game = False
+                    g_options = True
 
                 if (SNAKE.Head.Rect.y > BOUNDS_H - 25):
                     Movement = False
                     game = False
+                    g_options = True
 
                 if (SNAKE.Head.Rect.x < 2):
                     Movement = False
                     game = False
+                    g_options = True
 
                 if (SNAKE.Head.Rect.x > BOUNDS_W - 25):
                     Movement = False
                     game = False
+                    g_options = True
 
-
-            if (SNAKE.Is_Touching_Body()):
+            if SNAKE.Is_Touching_Body():
                 Movement = False
                 game = False
+                g_options = True
 
-
-            if (Touching_Apple(SNAKE, APPLE)):
+            if Touching_Apple(SNAKE, APPLE):
                 SNAKE.Increase()
 
                 APPLE.update(random.randint(30, BOUNDS_W-60),
@@ -331,11 +386,16 @@ def main():
                 Length = len(SNAKE.Body)
 
         # _____________________RENDER LOOP_____________________________
+        if (game or g_options):
             SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
             SDL_RenderClear(renderer)
 
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
             SDL_RenderFillRect(renderer, BG.Rect)
+
+            if (g_options):
+                for item in GameItems:
+                    GameItems[item].Render()
 
             APPLE.Render()
             SNAKE.Render()
