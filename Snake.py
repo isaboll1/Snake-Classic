@@ -231,8 +231,9 @@ def main():
         'Normal': TextObject('Normal', 100, 50, ['arcade'], (239, 239, 239), (460, 480))
     }
     GameItems = {
-        'Quit':    TextObject('Quit', 60, 50, ['arcade'], location = (450, 545)),
-        'Restart': TextObject('Restart', 100, 50, ['arcade'], location = (600, 545))
+        'Game Over': TextObject('Game Over', 130, 50, ['arcade'], color = (130, 130, 130), location = (250, 545)),
+        'Quit':     TextObject('Quit', 60, 50, ['arcade'], location = (470, 545)),
+        'Restart':  TextObject('Restart', 100, 50, ['arcade'], location = (600, 545))
     }
     SNAKE = Snake(20)
     APPLE = Fruit(20)
@@ -260,9 +261,11 @@ def main():
         if (g_options):
             for item in GameItems:
                 GameItems[item].highlight = False
-
-                if mouse.Is_Touching(GameItems[item]):
-                    GameItems[item].highlight = True
+                if item == 'Game Over':
+                    pass
+                else:
+                    if mouse.Is_Touching(GameItems[item]):
+                        GameItems[item].highlight = True
 
             if mouse.Is_Clicking(GameItems['Restart']):
                 del SNAKE
@@ -380,7 +383,7 @@ def main():
                 for i in SNAKE.Body:
                     if APPLE.Rect.x - i.Rect.x < 15 and APPLE.Rect.y - i.Rect.y < 15:
                         APPLE.update(random.randint(30, BOUNDS_W - 60),
-                                     random.randint(30, BOUNDS_H - 30))
+                                     random.randint(30, BOUNDS_H - 50))
 
 
                 Length = len(SNAKE.Body)
