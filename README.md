@@ -1,5 +1,6 @@
 # Snake-Classic
-(https://github.com/isaboll1/Snake-Classic/blob/master/Snake-Classic.png)
+
+![Snake Classic!](Snake-Classic.png)
 
 This is an implementation of the classic snake game in python and SDL2.
 The game is written using Python 3, and uses the Pysdl2 module in order to add support for SDL2.
