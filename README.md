@@ -1,4 +1,4 @@
-# Snake-Classic
+# Snake Classic
 
 ![Snake Classic!](Snake-Classic.png)
 
