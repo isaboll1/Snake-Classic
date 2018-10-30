@@ -48,11 +48,10 @@ def main():
             self.clicking = False
 
         def Compute(self):
+            self.clicking = False
             if(event.type == SDL_MOUSEBUTTONDOWN):
                 if(event.button.button == SDL_BUTTON_LEFT):
                     self.clicking = True
-            if(event.type == SDL_MOUSEBUTTONUP):
-                self.clicking = False
 
             if(event.type == SDL_MOUSEMOTION):
                 self.pointer.x = event.motion.x
@@ -442,7 +441,7 @@ def main():
                     running = False
                     break
 
-                if(event.key.keysym.scancode == SDL_SCANCODE_F12):
+                if (event.key.keysym.scancode == SDL_SCANCODE_F12):
                     if Fullscreen is False:
                         Fullscreen = True
                         WindowState(window, renderer, Fullscreen)
