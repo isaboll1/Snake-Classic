@@ -4,8 +4,6 @@ from sdl2 import *
 from sdl2.sdlttf import *
 import ctypes
 import random
-
-
 # Snake by Isa Bolling
 
 # GLOBALS
@@ -127,7 +125,9 @@ def main():
             self.body_color = [0, 0, 0]
             for i in range(len(headcolor)):
                 if headcolor[i] == 255:
-                    self.body_color[i] = 208
+                    color = headcolor[i] - 50
+                    color = 0 if color < 0 else color
+                    self.body_color[i] = color
 
         def Movement(self, direction):
             # Head Movement
@@ -383,7 +383,7 @@ def main():
                 for i in SNAKE.Body:
                     if APPLE.Rect.x - i.Rect.x < 15 and APPLE.Rect.y - i.Rect.y < 15:
                         APPLE.update(random.randint(30, BOUNDS_W - 60),
-                                     random.randint(30, BOUNDS_H - 50))
+                                     random.randint(50, BOUNDS_H - 60))
 
 
                 Length = len(SNAKE.Body)
