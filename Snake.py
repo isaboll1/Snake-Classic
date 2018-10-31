@@ -92,9 +92,10 @@ def main():
             SDL_RenderCopy(renderer, self.message, None, self.rect)
 
         def __del__(self):
+            for keys in list(TextObject.fonts):
+                font = TextObject.fonts.pop(keys, None)
+                if font: TTF_CloseFont(font)
             SDL_DestroyTexture(self.message)
-            for key in TextObject.fonts:
-                TTF_CloseFont(TextObject.fonts[key])
 
 
     class Node:
@@ -248,7 +249,14 @@ def main():
         elif fs:
             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP)
             SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT)
-
+            
+    def deleter(dic1, dic2, dic3):
+        for item in list(dic1):
+            del dic1[item]
+        for item in list(dic2):
+            del dic2[item]
+        for item in list(dic3):
+            del dic3[item]
 # __________________________GAME_LOOP_________________________________________
 
     P_FPS = True
@@ -450,7 +458,8 @@ def main():
                         WindowState(window, renderer, Fullscreen)
 
         SDL_Delay(DT)
-
+        
+    deleter(MenuItems, GameDifficulty, GameItems)
     SDL_DestroyWindow(window)
     SDL_DestroyRenderer(renderer)
     SDL_Quit()
