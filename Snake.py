@@ -252,7 +252,7 @@ def main():
         elif fs:
             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP)
             SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT)
-            
+
     def deleter(dic1, dic2, dic3):
         for item in list(dic1):
             del dic1[item]
@@ -461,7 +461,7 @@ def main():
                         WindowState(window, renderer, Fullscreen)
 
         SDL_Delay(DT)
-        
+
     deleter(MenuItems, GameDifficulty, GameItems)
     SDL_DestroyWindow(window)
     SDL_DestroyRenderer(renderer)
@@ -470,5 +470,6 @@ def main():
 
     return 0
 # ____________________________________________________________________________
+
 
 main()
