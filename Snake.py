@@ -112,6 +112,9 @@ def main():
             self.Rect.x = x
             self.Rect.y = y
 
+        def __del__(self):
+            del self.Rect
+
     class Snake:
         def __init__(self, size = 20, x = 100, y = 100, headcolor = (0, 255, 0)):
             self.size = size
