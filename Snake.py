@@ -38,6 +38,7 @@ def main():
     difficulty = False
     g_options = False
     Fullscreen = False
+    paused = False
     Length = 0
     DT = 10
 
@@ -64,9 +65,9 @@ def main():
             return self.Is_Touching(item) and self.clicking
 
 
-
     class TextObject:
         fonts = dict()
+
         def __init__(self, text, width, height, font_name,color = (0,0,0), location = (0, 0),
                                                                             font_size = 36):
             if len(font_name) > 1:
@@ -115,6 +116,7 @@ def main():
         def __del__(self):
             del self.Rect
 
+
     class Snake:
         def __init__(self, size = 20, x = 100, y = 100, headcolor = (0, 255, 0)):
             self.size = size
@@ -135,7 +137,7 @@ def main():
         def Movement(self, direction):
             # Head Movement
             self.Timer += self.Factor
-            if direction == 'Left' :
+            if direction == 'Left':
                 if self.Timer >= 10:
                     self.Head.update(self.Head.Rect.x - self.size, self.Head.Rect.y)
                     self.Timer = 0
@@ -170,7 +172,6 @@ def main():
                     self.Head.update(2, self.Head.Rect.y)
 
         def Timing_Process(self):
-
             if self.limit == 8:
                 self.Factor += 1
 
@@ -179,14 +180,12 @@ def main():
                 self.Factor = 3
 
         def Increase(self, rate = 6):
-            dl = 0
             for i in range(2, rate):
                 self.Body.append(Node(self.Body[len(self.Body)-1].last_pos[0],
                                       self.Body[len(self.Body)-1].last_pos[1],
                                       self.size, self.size, (0, 208, 0)))
 
             self.limit += 1
-
 
         def Render(self):
             self.Head = self.Body[0]
@@ -235,8 +234,9 @@ def main():
     }
     GameItems = {
         'Game Over': TextObject('Game Over', 130, 50, ['arcade'], color = (130, 130, 130), location = (250, 545)),
-        'Quit':     TextObject('Quit', 60, 50, ['arcade'], location = (470, 545)),
-        'Restart':  TextObject('Restart', 100, 50, ['arcade'], location = (600, 545))
+        'Quit':      TextObject('Quit', 60, 50, ['arcade'], location = (470, 545)),
+        'Restart':   TextObject('Restart', 100, 50, ['arcade'], location = (600, 545)),
+        'Paused':    TextObject('Paused', 100, 50, ['arcade'], color = (100, 100, 100), location = (350, 545))
     }
     SNAKE = Snake(20)
     APPLE = Fruit(20)
@@ -245,7 +245,7 @@ def main():
     def Touching_Apple(snake, fruit):
         return SDL_HasIntersection(snake.Head.Rect, fruit.Rect)
 
-    def WindowState(window,renderer, fs):
+    def WindowState(window, renderer, fs):
         if not fs:
             SDL_SetWindowFullscreen(window, 0)
 
@@ -267,8 +267,9 @@ def main():
     LastCounter = SDL_GetPerformanceCounter()
 
     while(running):
-        #print(len(SNAKE.Body))
+        # print(len(SNAKE.Body))
         if (g_options):
+            paused = False
             for item in GameItems:
                 GameItems[item].highlight = False
                 if item == 'Game Over':
@@ -294,7 +295,7 @@ def main():
         if (menu):
             BG.Rect.y = 30
             for item in MenuItems:
-                if item == 'Start' and difficulty:
+                if item is 'Start' and difficulty:
                     pass
                 else:
                     if mouse.Is_Touching(MenuItems[item]):
@@ -391,10 +392,9 @@ def main():
                 APPLE.update(random.randint(30, BOUNDS_W-60),
                              random.randint(30, BOUNDS_H-30))
                 for i in SNAKE.Body:
-                    if APPLE.Rect.x - i.Rect.x < 15 and APPLE.Rect.y - i.Rect.y < 15:
+                    if abs(APPLE.Rect.x - i.Rect.x) < 15 and abs(APPLE.Rect.y - i.Rect.y) < 15:
                         APPLE.update(random.randint(30, BOUNDS_W - 60),
                                      random.randint(50, BOUNDS_H - 60))
-
 
                 Length = len(SNAKE.Body)
 
@@ -406,9 +406,15 @@ def main():
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
             SDL_RenderFillRect(renderer, BG.Rect)
 
-            if (g_options):
+            if paused:
+                GameItems['Paused'].Render()
+
+            if g_options:
                 for item in GameItems:
-                    GameItems[item].Render()
+                    if item is 'Paused':
+                        pass
+                    else:
+                        GameItems[item].Render()
 
             APPLE.Render()
             SNAKE.Render()
@@ -433,18 +439,27 @@ def main():
 
             if(event.type == SDL_KEYDOWN):
                 if game:
-                    Movement = True
+                    if(event.key.keysym.scancode == SDL_SCANCODE_P):
+                        if not paused:
+                            Movement = False
+                            paused = True
+                        else:
+                            Movement = True
+                            paused = False
+
+                    if not paused:
+                        Movement = True
 
                     if(event.key.keysym.scancode == SDL_SCANCODE_LEFT):
                         if direction != "Right":
                             direction = "Left"
-                    elif(event.key.keysym.scancode == SDL_SCANCODE_RIGHT):
+                    if(event.key.keysym.scancode == SDL_SCANCODE_RIGHT):
                         if direction != "Left":
                             direction = "Right"
-                    elif (event.key.keysym.scancode == SDL_SCANCODE_UP):
+                    if (event.key.keysym.scancode == SDL_SCANCODE_UP):
                         if direction != "Down":
                             direction = "Up"
-                    elif (event.key.keysym.scancode == SDL_SCANCODE_DOWN):
+                    if (event.key.keysym.scancode == SDL_SCANCODE_DOWN):
                         if direction != "Up":
                             direction = "Down"
 
@@ -463,8 +478,8 @@ def main():
         SDL_Delay(DT)
 
     deleter(MenuItems, GameDifficulty, GameItems)
-    SDL_DestroyWindow(window)
     SDL_DestroyRenderer(renderer)
+    SDL_DestroyWindow(window)
     SDL_Quit()
     TTF_Quit()
 
