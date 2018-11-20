@@ -160,7 +160,6 @@ def main():
                                     self.Body[i-1].last_pos[1])
 
             # EDGE_CASES
-
             if not WALL:
                 if self.Head.Rect.y < 2:
                     self.Head.update(self.Head.Rect.x, BOUNDS_H-25)
@@ -222,7 +221,7 @@ def main():
 # __________________________OBJECTS____________________________________
     mouse = Pointer()
     BG = Node(0, 0, BOUNDS_W, BOUNDS_H, (255, 255, 255))
-    Title = TextObject('Snake  Classic', 400, 220, ['arcade', b'font/arcade.ttf'], (239,239,239))
+    Title = TextObject('Snake  Classic', 400, 220, ['arcade', b'font/arcade.ttf'], (239, 239, 239))
     MenuItems = {
         'Fullscreen': TextObject('Fullscreen', 150, 100, ['arcade'], (239, 239, 239), (100, 350)),
         'Start':      TextObject('Start', 100, 100, ['arcade'], (239, 239, 239), (350, 350)),
@@ -339,22 +338,6 @@ def main():
                 game = True
                 BG.Rect.y = 0
 
-        if (menu or difficulty):
-            SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
-            SDL_RenderClear(renderer)
-
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
-            SDL_RenderFillRect(renderer, BG.Rect)
-            for key in MenuItems:
-                MenuItems[key].Render()
-            if difficulty:
-                for option in GameDifficulty:
-                    GameDifficulty[option].Render()
-
-            Title.Render(200, 100)
-
-            SDL_RenderPresent(renderer)
-
         if (game):
             if Movement:
                 SNAKE.Movement(direction)
@@ -399,13 +382,22 @@ def main():
                 Length = len(SNAKE.Body)
 
         # _____________________RENDER LOOP_____________________________
+        SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
+        SDL_RenderClear(renderer)
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
+        SDL_RenderFillRect(renderer, BG.Rect)
+
+        if (menu or difficulty):
+            for key in MenuItems:
+                MenuItems[key].Render()
+            if difficulty:
+                for option in GameDifficulty:
+                    GameDifficulty[option].Render()
+
+            Title.Render(200, 100)
+
         if (game or g_options):
-            SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
-            SDL_RenderClear(renderer)
-
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
-            SDL_RenderFillRect(renderer, BG.Rect)
-
             if paused:
                 GameItems['Paused'].Render()
 
@@ -419,7 +411,7 @@ def main():
             APPLE.Render()
             SNAKE.Render()
 
-            SDL_RenderPresent(renderer)
+        SDL_RenderPresent(renderer)
 
         if (P_FPS):
             EndCounter = SDL_GetPerformanceCounter()
