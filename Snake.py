@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.abspath(__file__))
 from sdl2 import *
@@ -21,7 +22,7 @@ def main():
     if (TTF_Init() < 0):
         print(TTF_GetError())
 
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0):
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0):
         print(SDL_GetError())
 
     window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling', SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -40,6 +41,7 @@ def main():
     Fullscreen = False
     paused = False
     Length = 0
+    Score = 0
     DT = 10
 
 # _____________________________CLASSES______________________________________
@@ -218,7 +220,39 @@ def main():
                                              self.Color[2], 255)
             SDL_RenderFillRect(renderer, self.Rect)
 
-# __________________________OBJECTS____________________________________
+
+    class DynamicTextObject:
+        def __init__(self, renderer, font, size, color = (0, 0, 0)):
+            self.r = renderer
+            self.font = TTF_OpenFont(font.encode('utf-8'), size)
+            self.characters = dict()
+
+            l_n_n = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'
+                , 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', "'", ":", "(", ")", '-',"="
+                ,'A', 'B', 'C', 'D', 'E', 'F','G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'
+                , 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5'
+                , '6', '7', '8', '9', '0']
+
+
+            for char in l_n_n:
+                surface = TTF_RenderText_Solid(self.font, char.encode('utf-8'),
+                                               SDL_Color(color[0], color[1], color[2], 255))
+                self.characters[char] = SDL_CreateTextureFromSurface(self.r, surface)
+                SDL_FreeSurface(surface)
+
+        def RenderText(self, text, location, offset=0):
+            x = 0
+            for char in text:
+                d_rect = SDL_Rect(location[0] + x, location[1], location[2], location[3])
+                SDL_RenderCopy(self.r, self.characters[char], None, d_rect)
+                x += location[2] + offset
+
+        def __del__(self):
+            for char in list(self.characters):
+                SDL_DestroyTexture(self.characters[char])
+            TTF_CloseFont(self.font)
+
+    # __________________________OBJECTS____________________________________
     mouse = Pointer()
     BG = Node(0, 0, BOUNDS_W, BOUNDS_H, (255, 255, 255))
     Title = TextObject('Snake  Classic', 400, 220, ['arcade', b'font/arcade.ttf'], (239, 239, 239))
@@ -239,6 +273,7 @@ def main():
     }
     SNAKE = Snake(20)
     APPLE = Fruit(20)
+    S_Display = DynamicTextObject(renderer, 'font/joystix.ttf', 10, color = (130, 130, 130))
 # __________________________FUNCTIONS___________________________________
 
     def Touching_Apple(snake, fruit):
@@ -286,6 +321,7 @@ def main():
                 game = True
                 direction = None
                 g_options = False
+                Score = 0
 
             if mouse.Is_Clicking(GameItems['Quit']):
                 running = False
@@ -371,7 +407,7 @@ def main():
 
             if Touching_Apple(SNAKE, APPLE):
                 SNAKE.Increase()
-
+                Score += 6
                 APPLE.update(random.randint(30, BOUNDS_W-60),
                              random.randint(30, BOUNDS_H-30))
                 for i in SNAKE.Body:
@@ -398,6 +434,7 @@ def main():
             Title.Render(200, 100)
 
         if (game or g_options):
+            S_Display.RenderText("score:"+str(Score),(20, 548, 10, 40))
             if paused:
                 GameItems['Paused'].Render()
 
@@ -469,6 +506,7 @@ def main():
 
         SDL_Delay(DT)
 
+    del(S_Display)
     deleter(MenuItems, GameDifficulty, GameItems)
     SDL_DestroyRenderer(renderer)
     SDL_DestroyWindow(window)
