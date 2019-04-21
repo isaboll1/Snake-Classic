@@ -14,7 +14,6 @@ BOUNDS_W = WIDTH
 BOUNDS_H = HEIGHT - 60
 
 WALL = True
-global DT
 
 # ______________________________MAIN_______________________________________
 
@@ -42,7 +41,7 @@ def main():
     paused = False
     Length = 0
     Score = 0
-    DT = 10
+
 
 # _____________________________CLASSES______________________________________
     class Pointer:
@@ -65,6 +64,22 @@ def main():
 
         def Is_Clicking(self, item):
             return self.Is_Touching(item) and self.clicking
+
+
+    class Clock:
+        def __init__(self):
+            self.__last_time = 0
+            self.__current_time = SDL_GetPerformanceCounter()
+
+            self.dt = 0
+            self.dt_s = 0
+
+        def Tick(self):
+            self.__last_time = self.__current_time
+            self.__current_time = SDL_GetPerformanceCounter()
+            self.dt = (self.__current_time - self.__last_time) * 1000 / SDL_GetPerformanceFrequency()
+
+            self.dt_s = (self.dt * .001)
 
 
     class TextObject:
@@ -101,6 +116,38 @@ def main():
             SDL_DestroyTexture(self.message)
 
 
+    class DynamicTextObject:
+        def __init__(self, renderer, font, size, color = (0, 0, 0)):
+            self.r = renderer
+            self.font = TTF_OpenFont(font.encode('utf-8'), size)
+            self.characters = dict()
+
+            l_n_n = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'
+                , 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', "'", ":", "(", ")", '-',"="
+                ,'A', 'B', 'C', 'D', 'E', 'F','G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'
+                , 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5'
+                , '6', '7', '8', '9', '0']
+
+
+            for char in l_n_n:
+                surface = TTF_RenderText_Solid(self.font, char.encode('utf-8'),
+                                               SDL_Color(color[0], color[1], color[2], 255))
+                self.characters[char] = SDL_CreateTextureFromSurface(self.r, surface)
+                SDL_FreeSurface(surface)
+
+        def RenderText(self, text, location, offset=0):
+            x = 0
+            for char in text:
+                d_rect = SDL_Rect(location[0] + x, location[1], location[2], location[3])
+                SDL_RenderCopy(self.r, self.characters[char], None, d_rect)
+                x += location[2] + offset
+
+        def __del__(self):
+            for char in list(self.characters):
+                SDL_DestroyTexture(self.characters[char])
+            TTF_CloseFont(self.font)
+
+
     class Node:
         def __init__(self, x, y, w, h, color):
             self.current_pos = (x, y)
@@ -118,18 +165,19 @@ def main():
         def __del__(self):
             del self.Rect
 
-
     class Snake:
-        def __init__(self, size = 20, x = 100, y = 100, headcolor = (0, 255, 0)):
+        def __init__(self, clock, size=20, x=100, y=100, headcolor=(0, 255, 0)):
             self.size = size
             self.Body = [Node(x, y, self.size, self.size, (0, 240, 0)),
-                         Node(x-size, y, self.size, self.size, (0, 255, 0))]
+                         Node(x - size, y, self.size, self.size, (0, 255, 0))]
             self.Head = self.Body[0]
             self.Timer = 0
             self.limit = 0
-            self.Factor = 2
+            self.UT = .07
+            self.factor = 1.4
             self.head_color = headcolor
             self.body_color = [0, 0, 0]
+            self.clock = clock
             for i in range(len(headcolor)):
                 if headcolor[i] == 255:
                     color = headcolor[i] - 50
@@ -138,33 +186,28 @@ def main():
 
         def Movement(self, direction):
             # Head Movement
-            self.Timer += self.Factor
-            if direction == 'Left':
-                if self.Timer >= 10:
-                    self.Head.update(self.Head.Rect.x - self.size, self.Head.Rect.y)
-                    self.Timer = 0
-            elif direction == 'Right':
-                if self.Timer >= 10:
-                    self.Head.update(self.Head.Rect.x + self.size, self.Head.Rect.y)
-                    self.Timer = 0
-            elif direction == 'Up':
-                if self.Timer >= 10:
-                    self.Head.update(self.Head.Rect.x, self.Head.Rect.y - self.size)
-                    self.Timer = 0
-            elif direction == 'Down':
-                if self.Timer >= 10:
-                    self.Head.update(self.Head.Rect.x, self.Head.Rect.y + self.size)
-                    self.Timer = 0
+            self.Timer += self.clock.dt_s * (self.factor)
 
-            # Body Movement
-            for i in range(1, len(self.Body)):
-                self.Body[i].update(self.Body[i-1].last_pos[0],
-                                    self.Body[i-1].last_pos[1])
+            if self.Timer >= self.UT:
+                self.Timer = 0
+                if direction == 'Left':
+                    self.Head.update(self.Head.Rect.x - self.size, self.Head.Rect.y)
+                elif direction == 'Right':
+                    self.Head.update(self.Head.Rect.x + self.size, self.Head.Rect.y)
+                elif direction == 'Up':
+                    self.Head.update(self.Head.Rect.x, self.Head.Rect.y - self.size)
+                elif direction == 'Down':
+                    self.Head.update(self.Head.Rect.x, self.Head.Rect.y + self.size)
+
+                # Body Movement
+                for i in range(1, len(self.Body)):
+                    self.Body[i].update(self.Body[i - 1].last_pos[0],
+                                        self.Body[i - 1].last_pos[1])
 
             # EDGE_CASES
             if not WALL:
                 if self.Head.Rect.y < 2:
-                    self.Head.update(self.Head.Rect.x, BOUNDS_H-25)
+                    self.Head.update(self.Head.Rect.x, BOUNDS_H - 25)
                 if self.Head.Rect.y > BOUNDS_H - 25:
                     self.Head.update(self.Head.Rect.x, 2)
                 if self.Head.Rect.x < 2:
@@ -172,20 +215,18 @@ def main():
                 if self.Head.Rect.x > BOUNDS_W - 25:
                     self.Head.update(2, self.Head.Rect.y)
 
-        def Timing_Process(self):
+        def Speed_Process(self):
             if self.limit == 8:
-                self.Factor += 1
+                self.factor += .3
 
                 self.limit = 0
-            if self.Factor >= 3:
-                self.Factor = 3
+            if self.factor >= 2:
+                self.factor = 2
 
-        def Increase(self, rate = 6):
-            for i in range(2, rate):
-                self.Body.append(Node(self.Body[len(self.Body)-1].last_pos[0],
-                                      self.Body[len(self.Body)-1].last_pos[1],
-                                      self.size, self.size, (0, 208, 0)))
-
+        def Increase(self):
+            self.Body.append(Node(self.Body[len(self.Body) - 1].last_pos[0],
+                                  self.Body[len(self.Body) - 1].last_pos[1],
+                                  self.size, self.size, (0, 208, 0)))
             self.limit += 1
 
         def Render(self):
@@ -221,39 +262,10 @@ def main():
             SDL_RenderFillRect(renderer, self.Rect)
 
 
-    class DynamicTextObject:
-        def __init__(self, renderer, font, size, color = (0, 0, 0)):
-            self.r = renderer
-            self.font = TTF_OpenFont(font.encode('utf-8'), size)
-            self.characters = dict()
-
-            l_n_n = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'
-                , 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', "'", ":", "(", ")", '-',"="
-                ,'A', 'B', 'C', 'D', 'E', 'F','G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'
-                , 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5'
-                , '6', '7', '8', '9', '0']
-
-
-            for char in l_n_n:
-                surface = TTF_RenderText_Solid(self.font, char.encode('utf-8'),
-                                               SDL_Color(color[0], color[1], color[2], 255))
-                self.characters[char] = SDL_CreateTextureFromSurface(self.r, surface)
-                SDL_FreeSurface(surface)
-
-        def RenderText(self, text, location, offset=0):
-            x = 0
-            for char in text:
-                d_rect = SDL_Rect(location[0] + x, location[1], location[2], location[3])
-                SDL_RenderCopy(self.r, self.characters[char], None, d_rect)
-                x += location[2] + offset
-
-        def __del__(self):
-            for char in list(self.characters):
-                SDL_DestroyTexture(self.characters[char])
-            TTF_CloseFont(self.font)
 
     # __________________________OBJECTS____________________________________
     mouse = Pointer()
+    clock = Clock()
     BG = Node(0, 0, BOUNDS_W, BOUNDS_H, (255, 255, 255))
     Title = TextObject('Snake  Classic', 400, 220, ['arcade', b'font/arcade.ttf'], (239, 239, 239))
     MenuItems = {
@@ -271,7 +283,7 @@ def main():
         'Restart':   TextObject('Restart', 100, 50, ['arcade'], location = (600, 545)),
         'Paused':    TextObject('Paused', 100, 50, ['arcade'], color = (100, 100, 100), location = (350, 545))
     }
-    SNAKE = Snake(20)
+    SNAKE = Snake(clock, 20)
     APPLE = Fruit(20)
     S_Display = DynamicTextObject(renderer, 'font/joystix.ttf', 10, color = (130, 130, 130))
 # __________________________FUNCTIONS___________________________________
@@ -297,10 +309,9 @@ def main():
 # __________________________GAME_LOOP_________________________________________
 
     P_FPS = True
-    PerfCountFrequency = SDL_GetPerformanceFrequency()
-    LastCounter = SDL_GetPerformanceCounter()
 
     while(running):
+        clock.Tick()
         # print(len(SNAKE.Body))
         if (g_options):
             paused = False
@@ -315,7 +326,7 @@ def main():
             if mouse.Is_Clicking(GameItems['Restart']):
                 del SNAKE
                 del APPLE
-                SNAKE = Snake(20)
+                SNAKE = Snake(clock, 20)
                 APPLE = Fruit(20)
                 Movement = False
                 game = True
@@ -377,7 +388,7 @@ def main():
         if (game):
             if Movement:
                 SNAKE.Movement(direction)
-                SNAKE.Timing_Process()
+                SNAKE.Speed_Process()
 
             if WALL:
                 if (SNAKE.Head.Rect.y < 2):
@@ -451,12 +462,8 @@ def main():
         SDL_RenderPresent(renderer)
 
         if (P_FPS):
-            EndCounter = SDL_GetPerformanceCounter()
-            CounterElapsed = EndCounter - LastCounter
-            MSPerFrame = 1000.0 * (CounterElapsed) / (PerfCountFrequency)
-            FPS = PerfCountFrequency // CounterElapsed
-            print('FPS: ', FPS, 'FRAMETIME: ', MSPerFrame)
-            LastCounter = EndCounter
+            FPS = int((SDL_GetPerformanceFrequency() // clock.dt) // 10000)
+            print('FPS: ', FPS, 'FRAMETIME: ', clock.dt)
 
     # ____________________EVENT_LOOP_________________________________
         while(SDL_PollEvent(ctypes.byref(event))):
@@ -504,7 +511,7 @@ def main():
                         Fullscreen = False
                         WindowState(window, renderer, Fullscreen)
 
-        SDL_Delay(DT)
+        SDL_Delay(5)
 
     del(S_Display)
     deleter(MenuItems, GameDifficulty, GameItems)
