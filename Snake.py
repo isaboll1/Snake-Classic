@@ -26,7 +26,7 @@ def main():
 
     window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling', SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC)
 
     # VARIABLES
     event = SDL_Event()
@@ -462,7 +462,7 @@ def main():
         SDL_RenderPresent(renderer)
 
         if (P_FPS):
-            FPS = int((SDL_GetPerformanceFrequency() // clock.dt) // 10000)
+            FPS = 1000//clock.dt
             print('FPS: ', FPS, 'FRAMETIME: ', clock.dt)
 
     # ____________________EVENT_LOOP_________________________________
@@ -511,7 +511,7 @@ def main():
                         Fullscreen = False
                         WindowState(window, renderer, Fullscreen)
 
-        SDL_Delay(5)
+        #SDL_Delay(5)
 
     del(S_Display)
     deleter(MenuItems, GameDifficulty, GameItems)
