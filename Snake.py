@@ -26,7 +26,7 @@ def main():
 
     window = SDL_CreateWindow(b'Snake Classic - By Isa Bolling', SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC)
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
 
     # VARIABLES
     event = SDL_Event()
@@ -511,7 +511,7 @@ def main():
                         Fullscreen = False
                         WindowState(window, renderer, Fullscreen)
 
-        #SDL_Delay(5)
+        SDL_Delay(5)
 
     del(S_Display)
     deleter(MenuItems, GameDifficulty, GameItems)
