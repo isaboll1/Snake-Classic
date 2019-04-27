@@ -278,9 +278,10 @@ def main():
         'Normal': TextObject('Normal', 100, 50, ['arcade'], (239, 239, 239), (460, 480))
     }
     GameItems = {
-        'Game Over': TextObject('Game Over', 130, 50, ['arcade'], color = (130, 130, 130), location = (250, 545)),
-        'Quit':      TextObject('Quit', 60, 50, ['arcade'], location = (470, 545)),
-        'Restart':   TextObject('Restart', 100, 50, ['arcade'], location = (600, 545)),
+        'Game Over': TextObject('Game Over', 130, 50, ['arcade'], color = (130, 130, 130), location = (320, 545)),
+        'Menu':      TextObject('Menu', 50, 50, ['arcade'], location = (565, 545)),
+        'Restart':   TextObject('Restart', 80, 50, ['arcade'], location = (640, 545)),
+        'Quit': TextObject('Quit', 50, 50, ['arcade'], location = (740, 545)),
         'Paused':    TextObject('Paused', 100, 50, ['arcade'], color = (100, 100, 100), location = (350, 545))
     }
     SNAKE = Snake(clock, 20)
@@ -322,6 +323,18 @@ def main():
                 else:
                     if mouse.Is_Touching(GameItems[item]):
                         GameItems[item].highlight = True
+
+            if mouse.Is_Clicking(GameItems['Menu']):
+                del SNAKE
+                del APPLE
+                SNAKE = Snake(clock, 20)
+                APPLE = Fruit(20)
+                Movement = False
+                game = False
+                direction = None
+                g_options = False
+                Score = 0
+                menu = True
 
             if mouse.Is_Clicking(GameItems['Restart']):
                 del SNAKE
@@ -511,7 +524,6 @@ def main():
                         Fullscreen = False
                         WindowState(window, renderer, Fullscreen)
 
-        SDL_Delay(5)
 
     del(S_Display)
     deleter(MenuItems, GameDifficulty, GameItems)
