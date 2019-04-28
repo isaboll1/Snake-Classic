@@ -15,6 +15,25 @@ BOUNDS_H = HEIGHT - 60
 
 WALL = True
 
+# SCORE RELATED FUNCTIONS
+def LoadScoreFromFile():
+    file = None
+    try:
+        file = open('highscore.sc', 'r')
+    except FileNotFoundError:
+        return [0,0]
+    scores = []
+    for score in file:
+        scores.append(int(score))
+    file.close()
+    return scores
+
+def SaveScoreToFile(scores):
+    file = open('highscore.sc', 'w')
+    file.write(str(scores[0]) + '\n')
+    file.write(str(scores[1]))
+    file.close()
+
 # ______________________________MAIN_______________________________________
 
 def main():
@@ -41,7 +60,8 @@ def main():
     paused = False
     Length = 0
     Score = 0
-
+    High_Score = LoadScoreFromFile()
+    score_index = 0
 
 # _____________________________CLASSES______________________________________
     class Pointer:
@@ -121,21 +141,17 @@ def main():
             self.r = renderer
             self.font = TTF_OpenFont(font.encode('utf-8'), size)
             self.characters = dict()
+            self.size = size
 
-            l_n_n = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'
-                , 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', "'", ":", "(", ")", '-',"="
-                ,'A', 'B', 'C', 'D', 'E', 'F','G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'
-                , 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5'
-                , '6', '7', '8', '9', '0']
+            for i in range(32, 126):  # Now this converts the ascii values into the characters they represent
+                char = chr(i)
+                if char not in self.characters:
+                    surface = TTF_RenderText_Solid(self.font, char.encode('utf-8'),
+                                                   SDL_Color(color[0], color[1], color[2], 255))
+                    self.characters[char] = SDL_CreateTextureFromSurface(self.r, surface)
+                    SDL_FreeSurface(surface)
 
-
-            for char in l_n_n:
-                surface = TTF_RenderText_Solid(self.font, char.encode('utf-8'),
-                                               SDL_Color(color[0], color[1], color[2], 255))
-                self.characters[char] = SDL_CreateTextureFromSurface(self.r, surface)
-                SDL_FreeSurface(surface)
-
-        def RenderText(self, text, location, offset=0):
+        def RenderText(self, text, location, offset = 0):
             x = 0
             for char in text:
                 d_rect = SDL_Rect(location[0] + x, location[1], location[2], location[3])
@@ -164,6 +180,7 @@ def main():
 
         def __del__(self):
             del self.Rect
+
 
     class Snake:
         def __init__(self, clock, size=20, x=100, y=100, headcolor=(0, 255, 0)):
@@ -262,7 +279,6 @@ def main():
             SDL_RenderFillRect(renderer, self.Rect)
 
 
-
     # __________________________OBJECTS____________________________________
     mouse = Pointer()
     clock = Clock()
@@ -294,7 +310,7 @@ def main():
 
     def WindowState(window, renderer, fs):
         if not fs:
-            SDL_SetWindowFullscreen(window, 0)
+         SDL_SetWindowFullscreen(window, 0)
 
         elif fs:
             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP)
@@ -307,13 +323,19 @@ def main():
             del dic2[item]
         for item in list(dic3):
             del dic3[item]
+
+
 # __________________________GAME_LOOP_________________________________________
 
     P_FPS = True
 
-    while(running):
+    while (running):
         clock.Tick()
-        # print(len(SNAKE.Body))
+
+        if (P_FPS):
+            FPS = 1000 // clock.dt
+            print('FPS: ', FPS, 'FRAMETIME: ', clock.dt)
+
         if (g_options):
             paused = False
             for item in GameItems:
@@ -348,6 +370,7 @@ def main():
                 Score = 0
 
             if mouse.Is_Clicking(GameItems['Quit']):
+                SaveScoreToFile(High_Score)
                 running = False
                 break
 
@@ -390,6 +413,7 @@ def main():
                 menu = False
                 game = True
                 BG.Rect.y = 0
+                score_index = 0
 
             if mouse.Is_Clicking(GameDifficulty['Normal']):
                 difficulty = False
@@ -397,8 +421,12 @@ def main():
                 menu = False
                 game = True
                 BG.Rect.y = 0
+                score_index = 1
 
         if (game):
+            if High_Score[score_index] < Score:
+                High_Score[score_index] = Score
+
             if Movement:
                 SNAKE.Movement(direction)
                 SNAKE.Speed_Process()
@@ -439,7 +467,6 @@ def main():
                         APPLE.update(random.randint(30, BOUNDS_W - 60),
                                      random.randint(50, BOUNDS_H - 60))
 
-                Length = len(SNAKE.Body)
 
         # _____________________RENDER LOOP_____________________________
         SDL_SetRenderDrawColor(renderer, 239, 239, 239, 255)
@@ -458,7 +485,7 @@ def main():
             Title.Render(200, 100)
 
         if (game or g_options):
-            S_Display.RenderText("score:"+str(Score),(20, 548, 10, 40))
+            S_Display.RenderText(("Score:"+str(Score))+("  HighScore:"+str(High_Score[score_index])),(20, 548, 10, 40))
             if paused:
                 GameItems['Paused'].Render()
 
@@ -474,15 +501,12 @@ def main():
 
         SDL_RenderPresent(renderer)
 
-        if (P_FPS):
-            FPS = 1000//clock.dt
-            print('FPS: ', FPS, 'FRAMETIME: ', clock.dt)
-
     # ____________________EVENT_LOOP_________________________________
         while(SDL_PollEvent(ctypes.byref(event))):
             mouse.Compute()
 
             if(event.type == SDL_QUIT):
+                SaveScoreToFile(High_Score)
                 running = False
                 break
 
@@ -513,8 +537,10 @@ def main():
                             direction = "Down"
 
                 if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE):
+                    SaveScoreToFile(High_Score)
                     running = False
                     break
+
 
                 if (event.key.keysym.scancode == SDL_SCANCODE_F12):
                     if Fullscreen is False:
