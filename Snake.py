@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.abspath(__file__))
 from sdl2 import *
@@ -240,11 +240,12 @@ def main():
             if self.factor >= 2:
                 self.factor = 2
 
-        def Increase(self):
-            self.Body.append(Node(self.Body[len(self.Body) - 1].last_pos[0],
+        def Increase(self, amount = 1):
+            for i in range(amount):
+                self.Body.append(Node(self.Body[len(self.Body) - 1].last_pos[0],
                                   self.Body[len(self.Body) - 1].last_pos[1],
                                   self.size, self.size, (0, 208, 0)))
-            self.limit += 1
+                self.limit += 1
 
         def Render(self):
             self.Head = self.Body[0]
